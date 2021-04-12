@@ -7,7 +7,7 @@ part of observable.src.records;
 /// A change record to a field of a generic observable object.
 class PropertyChangeRecord<T> implements ChangeRecord {
   /// Object that changed.
-  final Object object;
+  final Object? object;
 
   /// Name of the property that changed.
   final Symbol name;

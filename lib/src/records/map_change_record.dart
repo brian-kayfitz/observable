@@ -12,12 +12,12 @@ class MapChangeRecord<K, V> implements ChangeRecord {
   /// The previous value associated with this key.
   ///
   /// Is always `null` if [isInsert].
-  final V oldValue;
+  final V? oldValue;
 
   /// The new value associated with this key.
   ///
   /// Is always `null` if [isRemove].
-  final V newValue;
+  final V? newValue;
 
   /// True if this key was inserted.
   final bool isInsert;
@@ -43,7 +43,7 @@ class MapChangeRecord<K, V> implements ChangeRecord {
         newValue = null;
 
   /// Apply this change record to [map].
-  void apply(Map<K, V> map) {
+  void apply(Map<K, V?> map) {
     if (isRemove) {
       map.remove(key);
     } else {

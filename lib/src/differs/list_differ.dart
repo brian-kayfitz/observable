@@ -48,38 +48,38 @@ enum _Edit {
 // With 1-edit updates, the shortest path would be just to update all seven
 // characters. With 2-edit updates, we delete 4, leave 3, and add 4. This
 // leaves the substring '123' intact.
-List<List<int>> _calcEditDistance<E>(
+List<List<int?>?> _calcEditDistance<E>(
   List<E> current,
   int currentStart,
   int currentEnd,
-  List<E> old,
+  List<E>? old,
   int oldStart,
   int oldEnd,
 ) {
   // 'Deletion' columns.
   final rowCount = oldEnd - oldStart + 1;
   final columnCount = currentEnd - currentStart + 1;
-  final distances = List<List<int>>.filled(rowCount, null);
+  final List<List<int?>?> distances = List<List<int>?>.filled(rowCount, null);
 
   // 'Addition' rows. Initialize null column.
   for (var i = 0; i < rowCount; i++) {
-    distances[i] = List<int>.filled(columnCount, null);
-    distances[i][0] = i;
+    distances[i] = List<int?>.filled(columnCount, null);
+    distances[i]![0] = i;
   }
 
   // Initialize null row.
   for (var j = 0; j < columnCount; j++) {
-    distances[0][j] = j;
+    distances[0]![j] = j;
   }
 
   for (var i = 1; i < rowCount; i++) {
     for (var j = 1; j < columnCount; j++) {
-      if (old[oldStart + i - 1] == current[currentStart + j - 1]) {
-        distances[i][j] = distances[i - 1][j - 1];
+      if (old![oldStart + i - 1] == current[currentStart + j - 1]) {
+        distances[i]![j] = distances[i - 1]![j - 1];
       } else {
-        final north = distances[i - 1][j] + 1;
-        final west = distances[i][j - 1] + 1;
-        distances[i][j] = math.min(north, west);
+        final north = distances[i - 1]![j]! + 1;
+        final west = distances[i]![j - 1]! + 1;
+        distances[i]![j] = math.min(north, west);
       }
     }
   }
@@ -90,10 +90,10 @@ List<List<int>> _calcEditDistance<E>(
 // This starts at the final weight, and walks "backward" by finding
 // the minimum previous weight recursively until the origin of the weight
 // matrix.
-Iterable<_Edit> _spliceOperationsFromEditDistances(List<List<int>> distances) {
+Iterable<_Edit> _spliceOperationsFromEditDistances(List<List<int?>?> distances) {
   var i = distances.length - 1;
-  var j = distances[0].length - 1;
-  var current = distances[i][j];
+  var j = distances[0]!.length - 1;
+  var current = distances[i]![j];
   final edits = <_Edit>[];
   while (i > 0 || j > 0) {
     if (i == 0) {
@@ -106,9 +106,9 @@ Iterable<_Edit> _spliceOperationsFromEditDistances(List<List<int>> distances) {
       i--;
       continue;
     }
-    final northWest = distances[i - 1][j - 1];
-    final west = distances[i - 1][j];
-    final north = distances[i][j - 1];
+    final northWest = distances[i - 1]![j - 1]!;
+    final west = distances[i - 1]![j]!;
+    final north = distances[i]![j - 1]!;
 
     final min = math.min(math.min(west, north), northWest);
     if (min == northWest) {
@@ -137,11 +137,11 @@ Iterable<_Edit> _spliceOperationsFromEditDistances(List<List<int>> distances) {
 int _sharedPrefix<E>(
   Equality<E> equality,
   List<E> e1,
-  List<E> e2,
+  List<E>? e2,
   int searchLength,
 ) {
   for (var i = 0; i < searchLength; i++) {
-    if (!equality.equals(e1[i], e2[i])) {
+    if (!equality.equals(e1[i], e2![i])) {
       return i;
     }
   }
@@ -176,7 +176,7 @@ List<ListChangeRecord<E>> _calcSplices<E>(
   Equality<E> equality,
   int currentStart,
   int currentEnd,
-  List<E> old,
+  List<E>? old,
   int oldStart,
   int oldEnd,
 ) {
@@ -191,7 +191,7 @@ List<ListChangeRecord<E>> _calcSplices<E>(
       minLength,
     );
   }
-  if (currentEnd == current.length && oldEnd == old.length) {
+  if (currentEnd == current.length && oldEnd == old!.length) {
     suffixCount = _sharedSuffix(
       equality,
       current,
@@ -210,7 +210,7 @@ List<ListChangeRecord<E>> _calcSplices<E>(
   }
 
   if (currentStart == currentEnd) {
-    final spliceRemoved = old.sublist(oldStart, oldEnd);
+    final spliceRemoved = old!.sublist(oldStart, oldEnd);
     return [
       ListChangeRecord<E>.remove(
         current,
@@ -276,7 +276,7 @@ List<ListChangeRecord<E>> _calcSplices<E>(
         }
         spliceAddedCount++;
         index++;
-        spliceRemovals.add(old[oldIndex]);
+        spliceRemovals.add(old![oldIndex]);
         oldIndex++;
         break;
       case _Edit.add:
@@ -290,7 +290,7 @@ List<ListChangeRecord<E>> _calcSplices<E>(
         if (!hasSplice()) {
           spliceIndex = index;
         }
-        spliceRemovals.add(old[oldIndex]);
+        spliceRemovals.add(old![oldIndex]);
         oldIndex++;
         break;
     }
@@ -342,7 +342,7 @@ void _mergeSplices<E>(
 
     var intersectCount = _intersect(
       spliceIndex,
-      spliceIndex + spliceRemoved.length,
+      spliceIndex + spliceRemoved!.length,
       current.index,
       current.index + current.addedCount,
     );
@@ -351,16 +351,16 @@ void _mergeSplices<E>(
       splices.removeAt(i);
       i--;
 
-      insertionOffset -= current.addedCount - current.removed.length;
+      insertionOffset -= current.addedCount - current.removed!.length;
       spliceAdded += current.addedCount - intersectCount;
 
       final deleteCount =
-          spliceRemoved.length + current.removed.length - intersectCount;
+          spliceRemoved.length + current.removed!.length - intersectCount;
       if (spliceAdded == 0 && deleteCount == 0) {
         // Merged splice is a no-op, discard.
         inserted = true;
       } else {
-        final removed = current.removed.toList();
+        final removed = current.removed!.toList();
         if (spliceIndex < current.index) {
           // Some prefix of splice.removed is prepended to current.removed.
           removed.insertAll(
@@ -441,14 +441,14 @@ List<ListChangeRecord<E>> _createInitialSplices<E>(
 // insert incorrectly, because those items will be shifted.
 List<ListChangeRecord<E>> projectListSplices<E>(
     List<E> list, List<ListChangeRecord<E>> records,
-    [Equality<E> equality]) {
+    [Equality<E>? equality]) {
   equality ??= DefaultEquality<E>();
   if (records.length <= 1) return records;
   final splices = <ListChangeRecord<E>>[];
   final initialSplices = _createInitialSplices(list, records);
   for (final splice in initialSplices) {
-    if (splice.addedCount == 1 && splice.removed.length == 1) {
-      if (splice.removed[0] != list[splice.index]) {
+    if (splice.addedCount == 1 && splice.removed!.length == 1) {
+      if (splice.removed![0] != list[splice.index]) {
         splices.add(splice);
       }
       continue;
@@ -461,7 +461,7 @@ List<ListChangeRecord<E>> projectListSplices<E>(
         splice.index + splice.addedCount,
         splice.removed,
         0,
-        splice.removed.length,
+        splice.removed!.length,
       ),
     );
   }

@@ -19,15 +19,15 @@ class ListChangeRecord<E> implements ChangeRecord {
   final int index;
 
   /// List that changed.
-  final List<E> object;
+  final List<E>? object;
 
   /// Elements that were removed starting at [index] (before adding elements).
-  final List<E> removed;
+  final List<E>? removed;
 
   factory ListChangeRecord(
-    List<E> object,
+    List<E>? object,
     int index, {
-    List<E> removed,
+    List<E>? removed,
     int addedCount = 0,
   }) {
     return ListChangeRecord._(
@@ -51,7 +51,7 @@ class ListChangeRecord<E> implements ChangeRecord {
   ///
   /// If [addedCount] is not specified it defaults to `removed.length`.
   ListChangeRecord.replace(this.object, this.index, List<E> removed,
-      [int addedCount])
+      [int? addedCount])
       : removed = freezeInDevMode<E>(removed),
         addedCount = addedCount ?? removed.length {
     _assertValidState();
@@ -70,14 +70,14 @@ class ListChangeRecord<E> implements ChangeRecord {
   Iterable<E> get added {
     return addedCount == 0
         ? const []
-        : object.getRange(index, index + addedCount);
+        : object!.getRange(index, index + addedCount);
   }
 
   /// Apply this change record to [list].
   void apply(List<E> list) {
     list
-      ..removeRange(index, index + removed.length)
-      ..insertAll(index, object.getRange(index, index + addedCount));
+      ..removeRange(index, index + removed!.length)
+      ..insertAll(index, object!.getRange(index, index + addedCount));
   }
 
   void _assertValidState() {
@@ -104,7 +104,7 @@ class ListChangeRecord<E> implements ChangeRecord {
     if (reference < index) return false;
 
     // If this was a shift operation anything after index is changed.
-    if (addedCount != removed.length) return true;
+    if (addedCount != removed!.length) return true;
 
     // Otherwise anything in the update range was changed.
     return reference < index + addedCount;

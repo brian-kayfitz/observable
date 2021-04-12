@@ -37,7 +37,7 @@ void main() {
 
       cn.changes.listen((value) {
         expect(value, TypeMatcher<ChangeRecords<T>>());
-        testFn(value);
+        testFn(value as ChangeRecords<T>);
       });
 
       await runFn(cn);

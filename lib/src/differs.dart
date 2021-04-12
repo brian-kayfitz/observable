@@ -20,7 +20,7 @@ abstract class Differ<E> {
   /// Returns a list of change records between [oldValue] and [newValue].
   ///
   /// A return value of an empty [ChangeRecord.NONE] means no changes found.
-  List<ChangeRecord> diff(E oldValue, E newValue);
+  List<ChangeRecord>? diff(E oldValue, E newValue);
 }
 
 /// Uses [Equality] to determine a simple [ChangeRecord.ANY] response.

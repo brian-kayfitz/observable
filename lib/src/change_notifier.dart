@@ -13,10 +13,10 @@ import 'records.dart';
 ///
 /// [ChangeNotifier] may be extended, mixed in, or used as a delegate.
 class ChangeNotifier<C extends ChangeRecord> implements Observable<C> {
-  StreamController<List<C>> _changes;
+  StreamController<List<C>>? _changes;
 
   bool _scheduled = false;
-  List<C> _queue;
+  List<C>? _queue;
 
   /// Emits a list of changes when the state of the object changes.
   ///
@@ -54,10 +54,10 @@ class ChangeNotifier<C extends ChangeRecord> implements Observable<C> {
     if (_scheduled && hasObservers) {
       final changes = _queue == null
           ? ChangeRecords<C>.any()
-          : ChangeRecords.wrap(freezeInDevMode(_queue));
+          : ChangeRecords.wrap(freezeInDevMode(_queue)!);
       _queue = null;
       _scheduled = false;
-      _changes.add(changes);
+      _changes!.add(changes);
       return true;
     }
     return false;
@@ -75,7 +75,7 @@ class ChangeNotifier<C extends ChangeRecord> implements Observable<C> {
   ///
   /// If there are no listeners to [changes], this method does nothing.
   @override
-  void notifyChange([C change]) {
+  void notifyChange([C? change]) {
     if (!hasObservers) {
       return;
     }

@@ -15,7 +15,7 @@ import 'observable.dart' show Observable;
 /// Represents an observable list of model values. If any items are added,
 /// removed, or replaced, then observers that are listening to [changes]
 /// will be notified.
-class ObservableList<E> extends ListBase<E> with Observable {
+class ObservableList<E> extends ListBase<E?> with Observable {
   /// Adapts [source] to be a `ObservableList<T>`.
   ///
   /// Any time the list would produce an element that is not a [T],
@@ -30,12 +30,12 @@ class ObservableList<E> extends ListBase<E> with Observable {
   static ObservableList<T> castFrom<S, T>(ObservableList<S> source) =>
       ObservableList<T>._spy(source._list.cast<T>());
 
-  List<ListChangeRecord<E>> _listRecords;
+  List<ListChangeRecord<E?>>? _listRecords;
 
-  StreamController<List<ListChangeRecord<E>>> _listChanges;
+  StreamController<List<ListChangeRecord<E?>>>? _listChanges;
 
   /// The inner [List<E>] with the actual storage.
-  final List<E> _list;
+  final List<E?> _list;
 
   /// Creates an observable list of the given [length].
   ///
@@ -44,8 +44,8 @@ class ObservableList<E> extends ListBase<E> with Observable {
   ///
   /// If a [length] argument is supplied, a fixed size list of that
   /// length is created.
-  ObservableList([int length])
-      : _list = length != null ? List<E>.filled(length, null) : <E>[];
+  ObservableList([int? length])
+      : _list = length != null ? List<E?>.filled(length, null) : <E>[];
 
   /// Creates an observable list of the given [length].
   ///
@@ -109,17 +109,17 @@ class ObservableList<E> extends ListBase<E> with Observable {
   ///     #<ListChangeRecord index: 3, removed: [b], addedCount: 0>
   ///
   /// [deliverChanges] can be called to force synchronous delivery.
-  Stream<List<ListChangeRecord<E>>> get listChanges {
+  Stream<List<ListChangeRecord<E?>>> get listChanges {
     _listChanges ??= StreamController.broadcast(
       sync: true,
       onCancel: () {
         _listChanges = null;
       },
     );
-    return _listChanges.stream;
+    return _listChanges!.stream;
   }
 
-  bool get hasListObservers => _listChanges != null && _listChanges.hasListener;
+  bool get hasListObservers => _listChanges != null && _listChanges!.hasListener;
 
   @override
   int get length => _list.length;
@@ -143,10 +143,10 @@ class ObservableList<E> extends ListBase<E> with Observable {
   }
 
   @override
-  E operator [](int index) => _list[index];
+  E? operator [](int index) => _list[index];
 
   @override
-  void operator []=(int index, E value) {
+  void operator []=(int index, E? value) {
     var oldValue = _list[index];
     if (hasListObservers && oldValue != value) {
       _notifyListChange(index, addedCount: 1, removed: [oldValue]);
@@ -168,7 +168,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
 
   // The following methods are here so that we can provide nice change events.
   @override
-  void setAll(int index, Iterable<E> iterable) {
+  void setAll(int index, Iterable<E?> iterable) {
     if (iterable is! List && iterable is! Set) {
       iterable = iterable.toList();
     }
@@ -181,7 +181,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
   }
 
   @override
-  void add(E value) {
+  void add(E? value) {
     var len = _list.length;
     _notifyChangeLength(len, len + 1);
     if (hasListObservers) {
@@ -192,7 +192,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
   }
 
   @override
-  void addAll(Iterable<E> iterable) {
+  void addAll(Iterable<E?> iterable) {
     var len = _list.length;
     _list.addAll(iterable);
 
@@ -205,7 +205,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
   }
 
   @override
-  bool remove(Object element) {
+  bool remove(Object? element) {
     for (var i = 0; i < length; i++) {
       if (this[i] == element) {
         removeRange(i, i + 1);
@@ -230,7 +230,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
   }
 
   @override
-  void insertAll(int index, Iterable<E> iterable) {
+  void insertAll(int index, Iterable<E?> iterable) {
     if (index < 0 || index > length) {
       throw RangeError.range(index, 0, length);
     }
@@ -256,7 +256,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
   }
 
   @override
-  void insert(int index, E element) {
+  void insert(int index, E? element) {
     if (index < 0 || index > length) {
       throw RangeError.range(index, 0, length);
     }
@@ -279,7 +279,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
   }
 
   @override
-  E removeAt(int index) {
+  E? removeAt(int index) {
     var result = this[index];
     removeRange(index, index + 1);
     return result;
@@ -296,7 +296,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
 
   void _notifyListChange(
     int index, {
-    List<E> removed,
+    List<E?>? removed,
     int addedCount = 0,
   }) {
     if (!hasListObservers) return;
@@ -304,7 +304,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
       _listRecords = [];
       scheduleMicrotask(deliverListChanges);
     }
-    _listRecords.add(ListChangeRecord<E>(
+    _listRecords!.add(ListChangeRecord<E?>(
       this,
       index,
       removed: removed,
@@ -325,11 +325,11 @@ class ObservableList<E> extends ListBase<E> with Observable {
 
   bool deliverListChanges() {
     if (_listRecords == null) return false;
-    final records = projectListSplices<E>(this, _listRecords);
+    final records = projectListSplices<E?>(this, _listRecords!);
     _listRecords = null;
 
     if (hasListObservers && records.isNotEmpty) {
-      _listChanges.add(UnmodifiableListView<ListChangeRecord<E>>(records));
+      _listChanges!.add(UnmodifiableListView<ListChangeRecord<E?>>(records));
       return true;
     }
     return false;
@@ -364,10 +364,10 @@ class ObservableList<E> extends ListBase<E> with Observable {
 
     for (var change in changeRecords) {
       var addEnd = change.index + change.addedCount;
-      var removeEnd = change.index + change.removed.length;
+      var removeEnd = change.index + change.removed!.length;
 
       Iterable addedItems = current.getRange(change.index, addEnd);
-      previous.replaceRange(change.index, removeEnd, addedItems);
+      previous.replaceRange(change.index, removeEnd, addedItems as Iterable<Object>);
     }
   }
 }
